@@ -59,6 +59,13 @@ This project is fully optimized for Vercel.
    curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://qk-tele.vercel.app/api/telegram/webhook"
    ```
 
+### 🔗 Deep Linking & Invitation Match Launch
+The bot and app support deep linking to invite players directly to a specific match.
+- When an invite is created, a link like `https://t.me/your_bot/app?startapp=match_UUID` is generated.
+- The webhook route catches this and passes the `startapp` parameter to the Web App container button URL.
+- On launch, the React frontend in [AppController.tsx](file:///Users/sobhan/Desktop/qk-tele/components/AppController.tsx) automatically reads the start parameter (via either `tg.initDataUnsafe.start_param` or URL query params) and routes the user into [Matchmaking.tsx](file:///Users/sobhan/Desktop/qk-tele/components/Matchmaking.tsx) with the specified match ID.
+
 ## 🐛 Troubleshooting
 - **Game button opens externally instead of a Mini App**: Ensure `NEXT_PUBLIC_APP_URL` is correct in Vercel and you redeployed. Telegram strictly requires valid HTTPS domains for `web_app` buttons.
+- **Dynamic Origin Detection**: If `NEXT_PUBLIC_APP_URL` is undefined or set to localhost, the webhook API route dynamically falls back to the incoming request's host/origin (`req.nextUrl.origin`). This allows webhook buttons to open ngrok tunnel URLs correctly during local testing.
 - **Supabase Insert Errors**: Use `supabase_schema_complete.sql` which relies on `jsonb_build_array` to avoid copy-paste newline syntax errors.
