@@ -67,22 +67,15 @@ export default function Home({ setScreen, user }: HomeProps) {
               </div>
               <h4 className="text-lg font-black text-slate-900">چالش دوستان</h4>
               <p className="text-[11px] font-bold text-blue-900/80 mt-1 leading-relaxed">
-                دوستانت رو از طریق لینک دعوت به بازی دعوت کن و ببین کی باهوش‌تره!
+                دوستت رو دعوت کن، موضوع رو انتخاب کنید، ۳ راند مبارزه کنید!
               </p>
             </div>
             <button 
-              onClick={() => {
-                if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
-                  const tg = (window as any).Telegram.WebApp;
-                  tg.switchInlineQuery("challenge", ["users", "groups"]);
-                } else {
-                  alert('شبیه‌سازی دعوت دوستان');
-                }
-              }}
+              onClick={() => setScreen('friend-invite')}
               className="btn-toy-blue w-full py-3 mt-4 text-xs font-black cursor-pointer shadow-md flex items-center justify-center gap-1.5"
             >
               <Link className="w-3.5 h-3.5" />
-              <span>ارسال لینک دعوت</span>
+              <span>دعوت دوست</span>
             </button>
           </div>
         </div>
