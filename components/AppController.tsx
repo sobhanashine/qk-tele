@@ -126,6 +126,38 @@ export default function AppController() {
 
   // ── Handlers ─────────────────────────────────────────────────────────────
 
+  const handleResumeMatch = useCallback(async (matchId: string) => {
+    try {
+      const res = await fetch(`/api/match/${matchId}/status`);
+      const data = await res.json();
+      const roundNum = data.current_round || 1;
+      const totalRounds = data.total_rounds || 1;
+
+      if (data.status === 'active') {
+        // Fetch questions for current round
+        const qRes = await fetch(`/api/match/${matchId}/round-questions?round=${roundNum}`);
+        const qData = await qRes.json();
+        setMatch({
+          matchId,
+          currentRound: roundNum,
+          totalRounds,
+          questions: qData.questions || [],
+          isFriendMatch: totalRounds > 1,
+        });
+        setScreen('battle');
+      } else if (data.status === 'category_select') {
+        setMatch({ matchId, currentRound: roundNum, totalRounds, questions: [], isFriendMatch: true });
+        setScreen('category-pick');
+      } else if (data.status === 'waiting') {
+        setMatch({ matchId, currentRound: roundNum, totalRounds, questions: [], isFriendMatch: true });
+        setScreen('waiting-friend');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+
   const handleStartRandomMatch = (matchId: string, questions: any[]) => {
     setMatch({ matchId, currentRound: 1, totalRounds: 1, questions, isFriendMatch: false });
     setScreen('battle');
@@ -171,7 +203,7 @@ export default function AppController() {
 
       {/* Screen Area */}
       <div className="flex-1 w-full overflow-hidden relative">
-        {screen === 'home' && <Home setScreen={setScreen} user={user} />}
+        {screen === 'home' && <Home setScreen={setScreen} user={user} onResumeMatch={handleResumeMatch} />}
         {screen === 'wallet' && <Wallet setScreen={setScreen} user={user} />}
         {screen === 'profile' && <Profile user={user} />}
         {screen === 'settings' && <Settings user={user} />}

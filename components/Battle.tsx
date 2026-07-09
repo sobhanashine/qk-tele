@@ -93,8 +93,8 @@ export default function Battle({ setScreen, matchId, questions, user, onComplete
 
   if (!currentQ) return null;
 
-  // Each option gets its own consistent color (A=blue, B=purple, C=yellow, D=red)
-  const toyColors = ["btn-toy-blue", "btn-toy-purple", "btn-toy-yellow", "btn-toy-red"];
+  // All options start yellow — correct/wrong colours appear only after selecting
+  const toyColors = ["btn-toy-yellow", "btn-toy-yellow", "btn-toy-yellow", "btn-toy-yellow"];
 
   return (
     <div className="flex flex-col h-full w-full p-5 justify-between relative overflow-hidden">
