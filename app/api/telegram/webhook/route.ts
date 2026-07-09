@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
           display_name: from.first_name || from.username || 'User',
         }, { onConflict: 'telegram_id' });
 
-        const miniAppUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://t.me/placeholder_bot/app';
+        const miniAppUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
 
         // Send welcome message with Mini App button
         const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;

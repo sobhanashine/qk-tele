@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Vazirmatn } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
 
 const vazirmatn = Vazirmatn({
   variable: "--font-vazirmatn",
@@ -24,6 +25,12 @@ export default function RootLayout({
       dir="rtl"
       className={`${vazirmatn.variable} h-full antialiased`}
     >
+      <head>
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body className="min-h-full flex flex-col font-sans bg-slate-950 text-white overflow-hidden selection:bg-purple-500/30 selection:text-purple-200">
         {children}
       </body>

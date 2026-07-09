@@ -7,9 +7,11 @@ interface MatchmakingProps {
   setScreen: (screen: ScreenState) => void;
   user: any;
   onStartMatch: (id: string, qs: any[]) => void;
+  matchId?: string | null;
+  clearMatchId?: () => void;
 }
 
-export default function Matchmaking({ setScreen, user, onStartMatch }: MatchmakingProps) {
+export default function Matchmaking({ setScreen, user, onStartMatch, matchId, clearMatchId }: MatchmakingProps) {
   const [matchmakingText, setMatchmakingText] = useState("در حال ارتباط با سرور...");
 
   useEffect(() => {
@@ -35,7 +37,10 @@ export default function Matchmaking({ setScreen, user, onStartMatch }: Matchmaki
         const res = await fetch('/api/match/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ telegram_id: user.id })
+          body: JSON.stringify({ 
+            telegram_id: user.id,
+            ...(matchId ? { match_id: matchId } : {})
+          })
         });
         const data = await res.json();
         
@@ -44,10 +49,12 @@ export default function Matchmaking({ setScreen, user, onStartMatch }: Matchmaki
             onStartMatch(data.match_id, data.questions);
           }, 4500);
         } else {
+          if (clearMatchId) clearMatchId();
           setScreen('home');
         }
       } catch (err) {
         console.error(err);
+        if (clearMatchId) clearMatchId();
         setScreen('home');
       }
     };
@@ -58,7 +65,7 @@ export default function Matchmaking({ setScreen, user, onStartMatch }: Matchmaki
       clearTimeout(timeout);
       clearInterval(textInterval);
     };
-  }, [user.id, onStartMatch, setScreen]);
+  }, [user.id, matchId, onStartMatch, setScreen, clearMatchId]);
 
   return (
     <div className="flex flex-col h-full w-full items-center justify-center p-6 animate-in fade-in duration-300 relative">
@@ -83,7 +90,10 @@ export default function Matchmaking({ setScreen, user, onStartMatch }: Matchmaki
 
       {/* Cancel Button */}
       <button 
-        onClick={() => setScreen('home')}
+        onClick={() => {
+          if (clearMatchId) clearMatchId();
+          setScreen('home');
+        }}
         className="mt-8 btn-toy-red px-8 py-3.5 text-xs flex items-center gap-2 cursor-pointer shadow-lg"
       >
         <X className="w-4 h-4" />

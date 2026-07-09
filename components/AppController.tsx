@@ -22,18 +22,36 @@ export default function AppController() {
   const [user, setUser] = useState({ id: 12345, name: 'مهمان', rank: 'برنز', score: 250, coins: 150 }); 
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
-      const tg = (window as any).Telegram.WebApp;
-      tg.ready();
-      tg.expand();
-      if (tg.initDataUnsafe?.user) {
-        setTimeout(() => {
-          setUser(prev => ({
-            ...prev,
+    let startapp: string | null = null;
+    let initialUser = { ...user };
+
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      startapp = searchParams.get('startapp') || searchParams.get('tgWebAppStartParam');
+
+      if ((window as any).Telegram?.WebApp) {
+        const tg = (window as any).Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        if (tg.initDataUnsafe?.start_param) {
+          startapp = tg.initDataUnsafe.start_param;
+        }
+        if (tg.initDataUnsafe?.user) {
+          initialUser = {
+            ...user,
             id: tg.initDataUnsafe.user.id,
             name: tg.initDataUnsafe.user.first_name,
-          }));
-        }, 0);
+          };
+          setUser(initialUser);
+        }
+      }
+
+      if (startapp) {
+        const cleanMatchId = startapp.startsWith('match_') ? startapp.replace('match_', '') : startapp;
+        if (cleanMatchId) {
+          setMatchId(cleanMatchId);
+          setScreen('matchmaking');
+        }
       }
     }
   }, []);
@@ -64,7 +82,15 @@ export default function AppController() {
         {screen === 'profile' && <Profile user={user} />}
         {screen === 'settings' && <Settings user={user} />}
         
-        {screen === 'matchmaking' && <Matchmaking setScreen={setScreen} user={user} onStartMatch={handleStartMatch} />}
+        {screen === 'matchmaking' && (
+          <Matchmaking 
+            setScreen={setScreen} 
+            user={user} 
+            onStartMatch={handleStartMatch} 
+            matchId={matchId}
+            clearMatchId={() => setMatchId(null)}
+          />
+        )}
         {screen === 'battle' && <Battle setScreen={setScreen} matchId={matchId!} questions={questions} user={user} onComplete={handleBattleComplete} />}
         {screen === 'result' && <Result setScreen={setScreen} matchId={matchId!} user={user} />}
       </div>

@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Quiz of Kings - Telegram Mini App (QK-Tele)
 
-## Getting Started
+A multiplayer trivia game built as a Telegram Mini App. Players can challenge each other, answer randomly shuffled questions from a robust database, and bet/win in-game currency integrated with Zarinpal.
 
-First, run the development server:
+## 🚀 Tech Stack
+- **Frontend & Backend**: [Next.js 16](https://nextjs.org/) (App Router)
+- **Database**: [Supabase](https://supabase.com/) (PostgreSQL)
+- **Styling**: Tailwind CSS
+- **Deployment**: Vercel
+- **Payments**: Zarinpal (Toman)
+- **Telegram Integration**: Telegram Webhooks & Web App API
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 📋 Features
+- **Real-Time Matches**: Asynchronous matching system tracking states between two players.
+- **Dynamic Questions**: 120 seed questions automatically shuffled (options randomized dynamically) upon insertion to prevent predictability.
+- **Telegram Bot Webhook**: Receives `/start` commands and payloads to automatically create/upsert users and serve the Mini App button.
+- **Zarinpal Payment Gateway**: Automatic callback routing for wallet top-ups.
+- **Clean UI/UX**: Designed for mobile (Telegram Web App container) with responsive layouts.
+
+## 🛠 Project Setup
+
+### 1. Environment Variables
+Copy `.env.example` to `.env.local` and fill in your keys:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+TELEGRAM_BOT_TOKEN=your-bot-token
+ZARINPAL_MERCHANT_ID=your-36-char-merchant-id
+NEXT_PUBLIC_APP_URL=https://qk-tele.vercel.app
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Database Initialization (Supabase)
+Navigate to your Supabase SQL Editor and run the queries found in `supabase_schema_complete.sql` to:
+1. Clear old tables (Cascade Drop).
+2. Create `users`, `questions`, `matches`, `match_answers`, and `transactions` tables.
+3. Seed 120 trivia questions (options are structured securely using `jsonb_build_array`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Local Development
+```bash
+npm install
+npm run dev
+```
+The app will be available at `http://localhost:3000`. 
+*Note: To test Telegram Webhooks locally, you must use a tunneling service like [ngrok](https://ngrok.com/) to expose your local port via HTTPS.*
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Deployment (Vercel)
+This project is fully optimized for Vercel. 
+1. Link the project: `npx vercel`
+2. Push to production: `npx vercel --prod`
+3. **Important**: Add your environment variables in the Vercel Dashboard -> Settings -> Environment Variables. Then click **Redeploy** so they take effect.
+4. Update `NEXT_PUBLIC_APP_URL` in Vercel to match your final production domain (e.g., `https://qk-tele.vercel.app`).
 
-## Learn More
+## 🤖 Bot Setup (BotFather)
+1. Send `/setdomain` to BotFather and enter your Vercel production URL (e.g., `https://qk-tele.vercel.app`).
+2. Set your webhook to hit the Next.js API route:
+   ```bash
+   curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://qk-tele.vercel.app/api/telegram/webhook"
+   ```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🐛 Troubleshooting
+- **Game button opens externally instead of a Mini App**: Ensure `NEXT_PUBLIC_APP_URL` is correct in Vercel and you redeployed. Telegram strictly requires valid HTTPS domains for `web_app` buttons.
+- **Supabase Insert Errors**: Use `supabase_schema_complete.sql` which relies on `jsonb_build_array` to avoid copy-paste newline syntax errors.
