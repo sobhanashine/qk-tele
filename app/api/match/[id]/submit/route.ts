@@ -45,9 +45,9 @@ export async function POST(
     const currentRoundObj = { ...rounds[roundIndex] };
 
     // 3. Mark current player as done
-    if (telegram_id === match.player_a_id) {
+    if (Number(telegram_id) === Number(match.player_a_id)) {
       currentRoundObj.player_a_done = true;
-    } else if (telegram_id === match.player_b_id) {
+    } else if (Number(telegram_id) === Number(match.player_b_id)) {
       currentRoundObj.player_b_done = true;
     } else {
       return NextResponse.json({ error: 'Player not part of this match' }, { status: 403 });
@@ -96,8 +96,8 @@ export async function POST(
 
     answers?.forEach((ans) => {
       if (ans.correct) {
-        if (ans.user_id === match.player_a_id) scoreA++;
-        else if (ans.user_id === match.player_b_id) scoreB++;
+        if (Number(ans.user_id) === Number(match.player_a_id)) scoreA++;
+        else if (Number(ans.user_id) === Number(match.player_b_id)) scoreB++;
       }
     });
 

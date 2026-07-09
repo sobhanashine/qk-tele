@@ -92,13 +92,19 @@ export default function Result({ setScreen, matchId, user, isFriendMatch, onNext
             </button>
           )}
           {!isCategorySelect && (
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 mb-2">
               {[0, 1, 2].map(i => (
                 <div key={i} className="w-2.5 h-2.5 bg-sky-400 rounded-full animate-bounce border-2 border-slate-900"
                   style={{ animationDelay: `${i * 0.15}s` }} />
               ))}
             </div>
           )}
+          <button
+            onClick={() => setScreen('home')}
+            className="w-full btn-toy-blue py-3 mt-2 text-xs font-black cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+          >
+            بازگشت به منوی اصلی
+          </button>
         </div>
       </div>
     );

@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (match_id) {
+      // Resume or join a match directly by ID
       const { data: match, error: matchError } = await supabaseAdmin
         .from('matches')
         .select('*')
@@ -21,11 +22,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Match not found' }, { status: 404 });
       }
 
-      if (match.player_b_id && match.player_b_id !== telegram_id) {
+      if (match.player_b_id && Number(match.player_b_id) !== Number(telegram_id) && Number(match.player_a_id) !== Number(telegram_id)) {
         return NextResponse.json({ error: 'Match is full' }, { status: 400 });
       }
 
-      if (!match.player_b_id && match.player_a_id !== telegram_id) {
+      if (!match.player_b_id && Number(match.player_a_id) !== Number(telegram_id)) {
+        // Player B joins the match
         await supabaseAdmin
           .from('matches')
           .update({ player_b_id: telegram_id, status: 'active' })
@@ -40,29 +42,48 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ match_id: match.id, questions });
     }
 
+    // Matchmaking: Find a waiting match created by someone else that has 1 round (random match)
     const { data: waitingMatch } = await supabaseAdmin
       .from('matches')
       .select('*')
       .eq('status', 'waiting')
       .is('player_b_id', null)
       .neq('player_a_id', telegram_id)
+      .eq('total_rounds', 1)
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (waitingMatch) {
+      // Ensure rounds is initialized if player A didn't do it right
+      const qIds = waitingMatch.question_set || [];
+      const defaultRounds = [
+        {
+          round: 1,
+          category: 'عمومی',
+          question_set: qIds,
+          player_a_done: false,
+          player_b_done: false
+        }
+      ];
+
       await supabaseAdmin
         .from('matches')
-        .update({ player_b_id: telegram_id, status: 'active' })
+        .update({ 
+          player_b_id: telegram_id, 
+          status: 'active',
+          rounds: waitingMatch.rounds && (waitingMatch.rounds as any[]).length > 0 ? waitingMatch.rounds : defaultRounds
+        })
         .eq('id', waitingMatch.id);
 
       const { data: questions } = await supabaseAdmin
         .from('questions')
         .select('id, text, options, category, difficulty')
-        .in('id', waitingMatch.question_set);
+        .in('id', qIds);
 
       return NextResponse.json({ match_id: waitingMatch.id, questions });
     }
 
+    // Create a new waiting match for random matchmaking (1 round, 6 questions)
     const { data: allQuestions } = await supabaseAdmin
       .from('questions')
       .select('id, text, options, category, difficulty')
@@ -71,10 +92,20 @@ export async function POST(req: NextRequest) {
     let selectedQuestions: any[] = [];
     let questionIds: number[] = [];
     if (allQuestions && allQuestions.length > 0) {
-      const shuffled = allQuestions.sort(() => 0.5 - Math.random());
+      const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
       selectedQuestions = shuffled.slice(0, 6);
       questionIds = selectedQuestions.map((q) => q.id);
     }
+
+    const initialRounds = [
+      {
+        round: 1,
+        category: 'عمومی',
+        question_set: questionIds,
+        player_a_done: false,
+        player_b_done: false
+      }
+    ];
 
     const { data: newMatch, error: createError } = await supabaseAdmin
       .from('matches')
@@ -82,12 +113,15 @@ export async function POST(req: NextRequest) {
         player_a_id: telegram_id,
         question_set: questionIds,
         status: 'waiting',
+        total_rounds: 1,
+        current_round: 1,
+        rounds: initialRounds
       })
       .select()
       .single();
 
     if (createError) {
-      return NextResponse.json({ error: 'Failed to create match' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to create match: ' + createError.message }, { status: 500 });
     }
 
     return NextResponse.json({ match_id: newMatch.id, questions: selectedQuestions });

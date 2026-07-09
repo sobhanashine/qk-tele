@@ -36,15 +36,15 @@ export async function POST(
     const pickerId: number =
       match.current_round % 2 === 1 ? match.player_a_id : match.player_b_id;
 
-    // 3. Guard: only the picker can select category
-    if (telegram_id !== pickerId) {
+    // 3. Guard: only the picker can select category (coerce both to number)
+    if (Number(telegram_id) !== Number(pickerId)) {
       return NextResponse.json({ error: 'Not your turn to pick category' }, { status: 403 });
     }
 
     // 4. Fetch up to 50 questions for this category, then pick 3 randomly in JS
     const { data: allQuestions, error: qError } = await supabaseAdmin
       .from('questions')
-      .select('id, question, options, correct_index, category')
+      .select('id, text, options, correct_index, category, difficulty')
       .eq('category', category)
       .limit(50);
 

@@ -164,6 +164,9 @@ export default function AppController() {
       } else if (data.status === 'waiting') {
         setMatch({ matchId, currentRound: roundNum, totalRounds, questions: [], isFriendMatch: true });
         setScreen('waiting-friend');
+      } else if (data.status === 'complete') {
+        setMatch({ matchId, currentRound: roundNum, totalRounds, questions: [], isFriendMatch: totalRounds > 1 });
+        setScreen('result');
       }
     } catch (e) {
       console.error(e);
