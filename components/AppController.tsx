@@ -73,6 +73,19 @@ export default function AppController() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Online presence heartbeat (every 60s) ────────────────────────────────
+  useEffect(() => {
+    if (!user?.id || user.id === 12345) return; // skip for guest
+    const ping = () => fetch('/api/user/heartbeat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telegram_id: user.id }),
+    }).catch(() => {});
+    ping();
+    const interval = setInterval(ping, 60_000);
+    return () => clearInterval(interval);
+  }, [user.id]);
+
   // ── Poll for friend joining (waiting-friend screen) ─────────────────────
   useEffect(() => {
     if (screen !== 'waiting-friend' || !match) return;
